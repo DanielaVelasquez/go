@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Environments
+.env
+
+#Mac
+.DS_STORE
+
+#PyCharm
+.idea/
