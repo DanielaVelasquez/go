@@ -1,27 +1,15 @@
 import copy
-
 from dlgo.gotypes import Player
 
+__all__ = [
+    'Board',
+    'GameState',
+    'Move',
+]
 
-class Move:
-    def __init__(self, point=None, is_pass=False, is_resign=False):
-        assert (point is not None) ^ is_pass ^ is_resign
-        self.point = point
-        self.is_play = (self.point is not None)
-        self.is_pass = is_pass
-        self.is_resign = is_resign
 
-    @classmethod
-    def play(cls, point):
-        return Move(point=point)
-
-    @classmethod
-    def pass_turn(cls):
-        return Move(is_pass=True)
-
-    @classmethod
-    def resign(cls):
-        return Move(is_resign=True)
+class IllegalMoveError(Exception):
+    pass
 
 
 class GoString:
@@ -31,8 +19,7 @@ class GoString:
         self.liberties = set(liberties)
 
     def remove_liberty(self, point):
-        if self.liberties.__contains__(point):
-            self.liberties.remove(point)
+        self.liberties.remove(point)
 
     def add_liberty(self, point):
         self.liberties.add(point)
@@ -80,17 +67,14 @@ class Board:
             else:
                 if neighbor_string not in adjacent_opposite_color:
                     adjacent_opposite_color.append(neighbor_string)
-
         new_string = GoString(player, [point], liberties)
+
         for same_color_string in adjacent_same_color:
             new_string = new_string.merged_with(same_color_string)
-
         for new_string_point in new_string.stones:
             self._grid[new_string_point] = new_string
-
         for other_color_string in adjacent_opposite_color:
             other_color_string.remove_liberty(point)
-
         for other_color_string in adjacent_opposite_color:
             if other_color_string.num_liberties == 0:
                 self._remove_string(other_color_string)
@@ -99,11 +83,11 @@ class Board:
         for point in string.stones:
             for neighbor in point.neighbors():
                 neighbor_string = self._grid.get(neighbor)
-            if neighbor_string is None:
-                continue
-            if neighbor_string is not string:
-                neighbor_string.add_liberty(point)
-        self._grid[point] = None
+                if neighbor_string is None:
+                    continue
+                if neighbor_string is not string:
+                    neighbor_string.add_liberty(point)
+            self._grid[point] = None
 
     def is_on_grid(self, point):
         return 1 <= point.row <= self.num_rows and \
@@ -120,6 +104,33 @@ class Board:
         if string is None:
             return None
         return string
+
+    def __eq__(self, other):
+        return isinstance(other, Board) and \
+               self.num_rows == other.num_rows and \
+               self.num_cols == other.num_cols and \
+               self._grid == other._grid
+
+
+class Move:
+    def __init__(self, point=None, is_pass=False, is_resign=False):
+        assert (point is not None) ^ is_pass ^ is_resign
+        self.point = point
+        self.is_play = (self.point is not None)
+        self.is_pass = is_pass
+        self.is_resign = is_resign
+
+    @classmethod
+    def play(cls, point):
+        return Move(point=point)
+
+    @classmethod
+    def pass_turn(cls):
+        return Move(is_pass=True)
+
+    @classmethod
+    def resign(cls):
+        return Move(is_resign=True)
 
 
 class GameState:
@@ -143,16 +154,6 @@ class GameState:
             board_size = (board_size, board_size)
         board = Board(*board_size)
         return GameState(board, Player.black, None, None)
-
-    def is_over(self):
-        if self.last_move is None:
-            return False
-        if self.last_move.is_resign:
-            return True
-        second_last_move = self.previous_state.last_move
-        if second_last_move is None:
-            return False
-        return self.last_move.is_pass and second_last_move.is_pass
 
     def is_move_self_capture(self, player, move):
         if not move.is_play:
@@ -188,3 +189,13 @@ class GameState:
                 self.board.get(move.point) is None and
                 not self.is_move_self_capture(self.next_player, move) and
                 not self.does_move_violate_ko(self.next_player, move))
+
+    def is_over(self):
+        if self.last_move is None:
+            return False
+        if self.last_move.is_resign:
+            return True
+        second_last_move = self.previous_state.last_move
+        if second_last_move is None:
+            return False
+        return self.last_move.is_pass and second_last_move.is_pass
