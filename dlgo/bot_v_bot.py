@@ -1,5 +1,5 @@
 from agent.naive import RandomBot
-from goboard_slow import GameState
+from goboard import GameState
 from dlgo import gotypes
 from dlgo.utils import print_board, print_move
 import time
