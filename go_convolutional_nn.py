@@ -1,6 +1,6 @@
 import numpy as np
 from keras.models import Sequential
-from keras.layers import Dense, Conv2D, Flatten, MaxPooling2D
+from keras.layers import Dense, Conv2D, Flatten, MaxPooling2D, Dropout
 
 np.random.seed(126)
 X = np.load('./generated_games/features-20.npy')
@@ -19,13 +19,15 @@ Y_train, Y_test = Y[:train_samples], Y[train_samples:]
 model = Sequential()
 model.add(Conv2D(filters=48,
                  kernel_size=(3, 3),
-                 activation='sigmoid',
+                 activation='relu',
                  padding='same',
                  input_shape=input_shape))
-model.add(Conv2D(48, (3, 3), padding='same', activation='sigmoid'))
+model.add(Dropout(rate=0.5))
+model.add(Conv2D(48, (3, 3), padding='same', activation='relu'))
 model.add(MaxPooling2D(pool_size=(2, 2)))
 model.add(Flatten())
-model.add(Dense(512, activation='sigmoid'))
+model.add(Dense(512, activation='relu'))
+model.add(Dropout(rate=0.5))
 model.add(Dense(size * size, activation='softmax'))
 model.summary()
 
