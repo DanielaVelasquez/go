@@ -1,5 +1,6 @@
 import copy
 from dlgo.gotypes import Player, Point
+from dlgo.scoring import compute_game_result
 from dlgo.zobrist import EMPTY_BOARD, HASH_CODE
 
 __all__ = [
@@ -129,6 +130,9 @@ class Board:
             return None
         return string
 
+    def neighbors(self, point):
+        return point.neighbors()
+
     def __eq__(self, other):
         return isinstance(other, Board) and \
                self.num_rows == other.num_rows and \
@@ -240,3 +244,11 @@ class GameState:
         moves.append(Move.pass_turn())
         moves.append(Move.resign())
         return moves
+
+    def winner(self):
+        if not self.is_over():
+            return None
+        if self.last_move.is_resign:
+            return self.next_player
+        game_result = compute_game_result(self)
+        return game_result.winner
