@@ -1,4 +1,7 @@
-class Encoder:
+from abc import ABC
+
+
+class Encoder(ABC):
     def name(self):
         raise NotImplementedError()
 
