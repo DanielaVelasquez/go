@@ -69,3 +69,13 @@ def load_experience(h5file):
         states=np.array(h5file['experience']['states']),
         actions=np.array(h5file['experience']['actions']),
         rewards=np.array(h5file['experience']['rewards']))
+
+
+def prepare_experience_data(experience, board_width, board_height):
+    experience_size = experience.actions.shape[0]
+    target_vectors = np.zeros((experience_size, board_width * board_height))
+    for i in range(experience_size):
+        action = experience.actions[i]
+        reward = experience.rewards[i]
+        target_vectors[i][action] = reward
+    return target_vectors

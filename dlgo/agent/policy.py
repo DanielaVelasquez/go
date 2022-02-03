@@ -1,8 +1,10 @@
 import numpy as np
+from keras.optimizer_v2.gradient_descent import SGD
 
 from dlgo import encoders, goboard, kerasutil
 from dlgo.agent.base import Agent
 from dlgo.agent.helpers_fast import is_point_an_eye
+from dlgo.rl.experience import prepare_experience_data
 
 
 class PolicyAgent(Agent):
@@ -53,6 +55,19 @@ class PolicyAgent(Agent):
                     self.collector.record_decision(state=board_tensor, action=point_idx)
                 return goboard.Move.play(point)
             return goboard.Move.pass_turn()
+
+    def train(self, experience, lr, clipnorm, batch_size):
+        self._model.compile(loss='categorical_crossentropy', optimizer=SGD(lr=lr, clipnorm=clipnorm))
+
+        target_vectors = prepare_experience_data(
+            experience,
+            self._encoder.board_width,
+            self._encoder.board_height)
+
+        self._model.fit(
+            experience.states, target_vectors,
+            batch_size=batch_size,
+            epochs=1)
 
 
 def load_policy_agent(h5file):
