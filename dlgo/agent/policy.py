@@ -16,7 +16,6 @@ class PolicyAgent(Agent):
     def serialize(self, h5file):
         h5file.create_group('encoder')
         h5file['encoder'].attrs['name'] = self.encoder.name()
-        1
         h5file['encoder'].attrs['board_width'] = self.encoder.board_width
 
         h5file['encoder'].attrs['board_height'] = self.encoder.board_height
